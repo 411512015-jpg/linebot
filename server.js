@@ -1,5 +1,5 @@
 const express = require('express');
-const { Client, middleware } = require('@line/bot-sdk');
+const line = require('@line/bot-sdk');
 const dotenv = require('dotenv');
 
 dotenv.config();
@@ -12,20 +12,20 @@ const config = {
   channelSecret: process.env.LINE_CHANNEL_SECRET,
 };
 
-const client = new Client(config);
+const client = new line.Client(config);
 
 app.get('/', (req, res) => {
   res.send('LINE Bot is running.');
 });
 
-app.post('/webhook', middleware(config), async (req, res) => {
+app.post('/webhook', line.middleware(config), async (req, res) => {
   try {
     const events = req.body.events || [];
 
     const results = await Promise.all(
       events.map(async (event) => {
         if (event.type !== 'message' || event.message.type !== 'text') {
-          return null;
+          return Promise.resolve(null);
         }
 
         const userText = event.message.text;
