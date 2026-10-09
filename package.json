@@ -1,13 +1,18 @@
 {
   "name": "linebot",
-  "version": "1.0.0",
-  "description": "LINE Bot 專題計畫 - 第一版",
+  "version": "2.0.0",
+  "description": "LINE Bot 專題計畫 - 第二版 (生活與待辦助手改善版)",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js"
   },
-  "keywords": ["LINE", "Bot"],
+  "keywords": [
+    "LINE",
+    "Bot",
+    "Todo",
+    "Timezone"
+  ],
   "author": "411512015-jpg",
   "license": "ISC",
   "dependencies": {

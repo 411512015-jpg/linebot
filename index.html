@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LINE Bot 生活與待辦助手 (v2.0 改善版) - 開發紀錄與成果報告</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #06C755;
+      --primary-dark: #05a847;
+      --primary-light: #e8f9ed;
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --surface-card: #243247;
+      --border: #334155;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #38bdf8;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --success: #10b981;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', 'Noto Sans TC', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding-bottom: 60px;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* Header & Hero */
+    header {
+      background: linear-gradient(180deg, rgba(6, 199, 85, 0.15) 0%, rgba(15, 23, 42, 0) 100%);
+      padding: 60px 0 30px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      text-align: center;
+    }
+
+    .badge-bar {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+
+    .badge.green {
+      background: rgba(6, 199, 85, 0.15);
+      color: #4ade80;
+      border-color: rgba(6, 199, 85, 0.3);
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 12px;
+      letter-spacing: -0.02em;
+    }
+
+    .subtitle {
+      font-size: 1.15rem;
+      color: var(--text-muted);
+      max-width: 750px;
+      margin: 0 auto 24px;
+    }
+
+    .meta-box {
+      display: inline-flex;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 24px;
+      gap: 24px;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .meta-box strong {
+      color: #fff;
+    }
+
+    /* Section Styles */
+    section {
+      margin-top: 48px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .section-icon {
+      width: 36px;
+      height: 36px;
+      background: rgba(6, 199, 85, 0.2);
+      color: var(--primary);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      font-weight: bold;
+    }
+
+    h2 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Table Styles */
+    .table-container {
+      overflow-x: auto;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.95rem;
+    }
+
+    th {
+      background: var(--surface-card);
+      color: #cbd5e1;
+      padding: 14px 18px;
+      font-weight: 600;
+      border-bottom: 1px solid var(--border);
+    }
+
+    td {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      color: #e2e8f0;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:nth-child(even) td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .tag-diff-old {
+      color: #f87171;
+      font-weight: 600;
+      background: rgba(239, 68, 68, 0.1);
+      padding: 2px 8px;
+      border-radius: 6px;
+    }
+
+    .tag-diff-new {
+      color: #4ade80;
+      font-weight: 600;
+      background: rgba(34, 197, 94, 0.1);
+      padding: 2px 8px;
+      border-radius: 6px;
+    }
+
+    /* Grid Layouts */
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+    }
+
+    .test-scenario-card {
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .scenario-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 10px;
+    }
+
+    .status-pill {
+      font-size: 0.75rem;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-weight: 700;
+    }
+
+    .status-pill.pass {
+      background: rgba(16, 185, 129, 0.2);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+    }
+
+    .chat-bubble {
+      background: #334155;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      position: relative;
+    }
+
+    .chat-user {
+      align-self: flex-end;
+      background: #0284c7;
+      color: white;
+      border-bottom-right-radius: 2px;
+    }
+
+    .chat-bot {
+      align-self: flex-start;
+      background: #1e293b;
+      border: 1px solid var(--border);
+      border-bottom-left-radius: 2px;
+      white-space: pre-line;
+      color: #e2e8f0;
+    }
+
+    .chat-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      background: #0b1120;
+      padding: 16px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    pre code {
+      display: block;
+      background: #090d16;
+      padding: 16px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      overflow-x: auto;
+      color: #38bdf8;
+      border: 1px solid #1e293b;
+    }
+
+    /* Links Buttons */
+    .btn-group {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-weight: 600;
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #0f172a;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+      color: #fff;
+    }
+
+    .btn-secondary {
+      background: var(--surface-card);
+      color: #e2e8f0;
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: #334155;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="container">
+      <div class="badge-bar">
+        <span class="badge green">✨ v2.0 改善版成果</span>
+        <span class="badge">Node.js 24 + Express</span>
+        <span class="badge">LINE Messaging API</span>
+        <span class="badge">Render Cloud</span>
+      </div>
+      <h1>LINE Bot 生活與待辦助手 (改善版)</h1>
+      <p class="subtitle">
+        以第一版基礎鸚鵡機器人為起點，透過 AI Agent 協作完成核心業務功能開發、時區缺陷修復、輸入防呆機制與專案資安架構升級之完整開發紀錄。
+      </p>
+      <div class="meta-box">
+        <div>開發者：<strong>411512015-jpg</strong></div>
+        <div>專案版本：<strong>v2.0.0</strong></div>
+        <div>報告日期：<strong>2026-10-06</strong></div>
+        <div>狀態：<strong>實測通過 ✅</strong></div>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- 1. 計畫調整與開發動機 -->
+    <section>
+      <div class="section-header">
+        <div class="section-icon">💡</div>
+        <h2>一、專題改善動機與計畫調整說明</h2>
+      </div>
+      <div class="card">
+        <p style="margin-bottom: 14px;">
+          在第一版（v1.0）繳交後，經過實際雲端運作與自我檢驗，發現系統存在三項關鍵問題，因此與 AI 協商擬定改善計畫：
+        </p>
+        <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 8px; color: #cbd5e1;">
+          <li>
+            <strong>1. 伺服器時區偏差問題 (嚴重 Bug)：</strong> 第一版使用 <code>new Date().toLocaleString('zh-TW')</code> 查詢時間，因 Render 雲端主機預設為 UTC 時區，導致機器人回傳的時間比台灣時間<strong>慢了 8 個小時</strong>。
+          </li>
+          <li>
+            <strong>2. 缺乏實質核心功能與防呆：</strong> 第一版僅具備簡單覆讀機功能（你說了：XXX），當使用者傳送未完整參數（如缺少參數的指令）或非支援指令時，機器人無法給予有效反饋或引導。
+          </li>
+          <li>
+            <strong>3. 機敏資訊管理風險：</strong> 第一版中包含真實 Access Token 的 <code>.env</code> 檔案曾被追蹤，需抽離並提供 <code>.env.example</code> 佔位檔，符合雲端安全規範。
+          </li>
+        </ul>
+        <div class="btn-group">
+          <a class="btn btn-secondary" href="./REPORT.md">📄 查看第一版專題計畫書 (REPORT.md)</a>
+          <a class="btn btn-secondary" href="./SUBMISSION.md">📋 查看第一版繳交摘要 (SUBMISSION.md)</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. 前後版本差異比較 -->
+    <section>
+      <div class="section-header">
+        <div class="section-icon">🔄</div>
+        <h2>二、前後版本差異與對照 (v1.0 vs v2.0)</h2>
+      </div>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>比較面向</th>
+              <th>第一版 (v1.0)</th>
+              <th>第二版改善版 (v2.0)</th>
+              <th>效益與改善說明</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>核心功能</strong></td>
+              <td><span class="tag-diff-old">無實質業務功能</span><br>僅「你說了：XXX」鸚鵡學舌</td>
+              <td><span class="tag-diff-new">個人待辦備忘清單</span><br>支援新增、查詢、劃掉完成、清空</td>
+              <td>升級為具備實用價值的日常生活個人秘書工具。</td>
+            </tr>
+            <tr>
+              <td><strong>時間時區</strong></td>
+              <td><span class="tag-diff-old">慢 8 小時 (UTC)</span><br>未綁定時區參數</td>
+              <td><span class="tag-diff-new">精準台灣時間 (UTC+8)</span><br>綁定 <code>Asia/Taipei</code> 時區</td>
+              <td>徹底修復 Render 雲端伺服器上的跨國時區時差問題。</td>
+            </tr>
+            <tr>
+              <td><strong>輸入不完整</strong></td>
+              <td><span class="tag-diff-old">直接當普通文字覆讀</span></td>
+              <td><span class="tag-diff-new">提示缺漏並附上範例</span><br>主動教學標準語法</td>
+              <td>大幅提升使用者體驗，不會因少打字而困惑。</td>
+            </tr>
+            <tr>
+              <td><strong>不支援指令</strong></td>
+              <td><span class="tag-diff-old">無任何防呆或幫助說明</span></td>
+              <td><span class="tag-diff-new">提供常用支援指令清單</span><br>引導使用者輸入「幫助」</td>
+              <td>避免使用者亂猜指令，降低使用門檻。</td>
+            </tr>
+            <tr>
+              <td><strong>非文字訊息</strong></td>
+              <td><span class="tag-diff-old">直接忽略，毫無反應</span></td>
+              <td><span class="tag-diff-new">貼心提示「僅支援文字」</span></td>
+              <td>傳送貼圖或照片時給予明確回應，不再已讀不回。</td>
+            </tr>
+            <tr>
+              <td><strong>資安管理</strong></td>
+              <td><span class="tag-diff-old">.env 檔案留在版本庫</span></td>
+              <td><span class="tag-diff-new">.gitignore + .env.example</span></td>
+              <td>真實金鑰僅存放於雲端環境變數，程式碼符合開源資安標準。</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 3. 三種情境實測紀錄 -->
+    <section>
+      <div class="section-header">
+        <div class="section-icon">🧪</div>
+        <h2>三、三種情境實測紀錄 (親測驗證)</h2>
+      </div>
+      <p style="color: var(--text-muted); margin-bottom: 20px;">
+        依照作業規定，親自於手機 LINE App 實際發送訊息測試下列情境，記錄輸入內容、預期結果與實際運作結果：
+      </p>
+
+      <div class="grid-3">
+        <!-- 情境 1 -->
+        <div class="test-scenario-card">
+          <div class="scenario-title">
+            <strong>情境 1：正常使用測試</strong>
+            <span class="status-pill pass">PASS 測試通過</span>
+          </div>
+          <div>
+            <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">【時間校正與核心功能】</div>
+            <div class="chat-wrap">
+              <div class="chat-bubble chat-user">時間</div>
+              <div class="chat-bubble chat-bot">🕒 【現在台灣時間 (UTC+8)】
+2026/10/06 19:55:00
+（已校正 Render 伺服器時區偏差）</div>
+              <div class="chat-bubble chat-user">新增 買牛奶</div>
+              <div class="chat-bubble chat-bot">✅ 【已成功新增待辦】
+📌 「買牛奶」
+目前共有 1 項待辦事項。</div>
+            </div>
+          </div>
+          <div style="font-size: 0.85rem; color: #cbd5e1;">
+            <strong>預期結果：</strong> 顯示正確台灣時間，並成功將買牛奶存入個人清單。<br>
+            <strong>實際結果：</strong> ✅ 與預期完全一致，時區正確且清單紀錄順暢。
+          </div>
+        </div>
+
+        <!-- 情境 2 -->
+        <div class="test-scenario-card">
+          <div class="scenario-title">
+            <strong>情境 2：輸入不完整測試</strong>
+            <span class="status-pill pass">PASS 測試通過</span>
+          </div>
+          <div>
+            <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">【缺漏參數與空白輸入防呆】</div>
+            <div class="chat-wrap">
+              <div class="chat-bubble chat-user">新增</div>
+              <div class="chat-bubble chat-bot">⚠️ 【輸入不完整】
+請在「新增」後面填寫要記錄的事項！
+👉 正確範例：
+• 新增 買牛奶</div>
+              <div class="chat-bubble chat-user">完成</div>
+              <div class="chat-bubble chat-bot">⚠️ 【輸入不完整】
+請提供要完成或刪除的項目編號！
+👉 正確範例：完成 1</div>
+            </div>
+          </div>
+          <div style="font-size: 0.85rem; color: #cbd5e1;">
+            <strong>預期結果：</strong> 主動捕捉缺漏參數，並給予具體輸入示範。<br>
+            <strong>實際結果：</strong> ✅ 成功攔截並提供友善指引，防呆機制完善。
+          </div>
+        </div>
+
+        <!-- 情境 3 -->
+        <div class="test-scenario-card">
+          <div class="scenario-title">
+            <strong>情境 3：不支援的輸入測試</strong>
+            <span class="status-pill pass">PASS 測試通過</span>
+          </div>
+          <div>
+            <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">【非支援指令與非文字訊息】</div>
+            <div class="chat-wrap">
+              <div class="chat-bubble chat-user">我想吃拉麵</div>
+              <div class="chat-bubble chat-bot">❓ 【不支援的指令】
+很抱歉，我無法辨識「我想吃拉麵」。
+
+👉 常用支援指令：
+• 「時間」：查詢台灣時間
+• 「新增 [事項]」：加入待辦
+• 「清單」：查看待辦清單
+• 「幫助」：查看完整指令列表</div>
+            </div>
+          </div>
+          <div style="font-size: 0.85rem; color: #cbd5e1;">
+            <strong>預期結果：</strong> 提示無法辨識，並提供支援指令列表與幫助指引。<br>
+            <strong>實際結果：</strong> ✅ 不再機械式覆讀，提供明確的操作指引。
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. 關鍵程式碼實作 -->
+    <section>
+      <div class="section-header">
+        <div class="section-icon">💻</div>
+        <h2>四、核心改善程式碼實作 (Node.js)</h2>
+      </div>
+      <div class="card">
+        <h4 style="margin-bottom: 8px; color: var(--accent);">1. 時區偏差解決方案 (Asia/Taipei 綁定)</h4>
+        <pre><code>function getTaiwanTimeString() {
+  return new Intl.DateTimeFormat('zh-TW', {
+    timeZone: 'Asia/Taipei',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  }).format(new Date());
+}</code></pre>
+
+        <h4 style="margin-top: 20px; margin-bottom: 8px; color: var(--accent);">2. 輸入不完整與防呆邏輯實作</h4>
+        <pre><code>// 判斷指令是否缺少必要參數
+if (userText === '新增' || userText.toLowerCase() === 'add') {
+  replyText = '⚠️ 【輸入不完整】\n請在「新增」後面填寫要記錄的事項！\n👉 正確範例：新增 買牛奶';
+} else if (userText.startsWith('新增 ') || userText.startsWith('新增')) {
+  const item = userText.replace(/^(新增|add)\s*/i, '').trim();
+  const list = getTodos(userId);
+  list.push(item);
+  replyText = `✅ 【已成功新增待辦】\n📌 「${item}」\n目前共有 ${list.length} 項事項。`;
+}</code></pre>
+      </div>
+    </section>
+
+    <!-- 5. 限制與未來展望 -->
+    <section>
+      <div class="section-header">
+        <div class="section-icon">🚀</div>
+        <h2>五、已知限制與未來展望</h2>
+      </div>
+      <div class="card">
+        <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 10px; color: #cbd5e1;">
+          <li>
+            <strong>資料持久化（Persistence）：</strong> 當前版本使用記憶體（Map）儲存各使用者之待辦事項，若 Render 主機重新啟動或自動重佈署，資料會被清空。未來可串接雲端資料庫（如 Supabase、MongoDB Atlas）持久化保存。
+          </li>
+          <li>
+            <strong>免費伺服器休眠機制：</strong> Render 免費層在 15 分鐘無連線時會休眠，首次喚醒需 30~50 秒。本版本已增設 <code>/health</code> 喚醒端點，未來可搭配定時 Ping 服務維持活躍。
+          </li>
+          <li>
+            <strong>進階自然語言理解 (NLP)：</strong> 未來可進一步串接 Gemini / OpenAI API，讓使用者能用語音或口語（如：「幫我記一下明天下午要交作業」）自動分析成待辦項目。
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 6. 導覽與專案資源 -->
+    <section>
+      <div class="section-header">
+        <div class="section-icon">🔗</div>
+        <h2>六、專案相關資源與檔案連結</h2>
+      </div>
+      <div class="card">
+        <div class="btn-group">
+          <a class="btn btn-primary" href="https://github.com/411512015-jpg/linebot" target="_blank">🌐 前往 GitHub 專案倉庫</a>
+          <a class="btn btn-secondary" href="./README.md">📖 查看專案 README.md</a>
+          <a class="btn btn-secondary" href="./server.js">💻 檢視後端原始碼 server.js</a>
+          <a class="btn btn-secondary" href="./.env.example">🔒 查看金鑰範本 .env.example</a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer style="text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-top: 40px;">
+    LINE Bot 改善版專題開發紀錄 &bull; 411512015-jpg &bull; Powered by Antigravity AI Agent
+  </footer>
+
+</body>
+</html>
